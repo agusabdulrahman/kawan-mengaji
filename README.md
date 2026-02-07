@@ -10,6 +10,8 @@
 3. Run the app:
    `npm run dev`
 
+db superbase: DU60DBv2K53Fc96o
+
 ## File Tree: kawanmengaji
 
 ```

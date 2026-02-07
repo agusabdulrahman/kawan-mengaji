@@ -1,8 +1,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth, useClerk, useUser } from '@clerk/clerk-react';
 import { SurahShort, ViewState, Bookmark, UserProgress, Lesson } from './types';
 import { getSurahList } from './services/quranService';
 import { LESSONS as DEFAULT_LESSONS } from './services/learningData';
+import { createSupabaseClient } from './services/supabaseClient';
+import { fetchUserState, saveUserState } from './services/userState';
 import Navbar from './components/Navbar';
 import SurahCard from './components/SurahCard';
 import SurahDetailView from './components/SurahDetailView';
@@ -15,10 +18,16 @@ import AdminView from './components/AdminView';
 const App: React.FC = () => {
   const [surahs, setSurahs] = useState<SurahShort[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
+  const { openSignIn, signOut } = useClerk();
+  const authLoading = !isLoaded;
+  const clerkUser = isSignedIn ? user : null;
   const [viewState, setViewState] = useState<ViewState>('LIST');
   const [selectedSurahId, setSelectedSurahId] = useState<number | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loginHint, setLoginHint] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : true;
@@ -53,6 +62,15 @@ const App: React.FC = () => {
     fetchSurahs();
   }, []);
 
+  const supabase = useMemo(
+    () =>
+      createSupabaseClient(async () => {
+        const token = await getToken();
+        return token ?? null;
+      }),
+    [getToken]
+  );
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -63,16 +81,41 @@ const App: React.FC = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-  }, [bookmarks]);
+    if (!clerkUser) {
+      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    }
+  }, [bookmarks, clerkUser]);
 
   useEffect(() => {
-    localStorage.setItem('userProgress', JSON.stringify(progress));
-  }, [progress]);
+    if (!clerkUser) {
+      localStorage.setItem('userProgress', JSON.stringify(progress));
+    }
+  }, [progress, clerkUser]);
 
   useEffect(() => {
-    localStorage.setItem('customLessons', JSON.stringify(lessons));
-  }, [lessons]);
+    if (!clerkUser) {
+      localStorage.setItem('customLessons', JSON.stringify(lessons));
+    }
+  }, [lessons, clerkUser]);
+
+  useEffect(() => {
+    if (!clerkUser) return;
+
+    const loadUserState = async () => {
+      const state = await fetchUserState(supabase, clerkUser.id);
+      if (!state) return;
+      setProgress(state.progress);
+      setBookmarks(state.bookmarks);
+      setLessons(state.lessons);
+    };
+
+    loadUserState();
+  }, [clerkUser, supabase]);
+
+  useEffect(() => {
+    if (!clerkUser) return;
+    saveUserState(supabase, clerkUser.id, { progress, bookmarks, lessons });
+  }, [clerkUser, supabase, progress, bookmarks, lessons]);
 
   const filteredSurahs = useMemo(() => {
     return surahs.filter(s => 
@@ -104,7 +147,18 @@ const App: React.FC = () => {
     setSelectedSurahId(null);
   };
 
+  const requireLogin = (message: string) => {
+    if (!clerkUser) {
+      setLoginHint(message);
+      setTimeout(() => setLoginHint(null), 2500);
+      openSignIn({});
+      return true;
+    }
+    return false;
+  };
+
   const handleGoToLearn = () => {
+    if (requireLogin('Login dulu untuk akses fitur belajar.')) return;
     setViewState('LEARNING');
     setSelectedSurahId(null);
   };
@@ -123,11 +177,13 @@ const App: React.FC = () => {
   };
 
   const handleStartLesson = (lesson: Lesson) => {
+    if (requireLogin('Login dulu untuk mulai belajar.')) return;
     setSelectedLesson(lesson);
     setViewState('QUIZ');
   };
 
   const handleStartPractice = () => {
+    if (requireLogin('Login dulu untuk mulai latihan.')) return;
     setViewState('TAJWEED_PRACTICE');
   };
 
@@ -177,9 +233,27 @@ const App: React.FC = () => {
     });
   };
 
+  const handleLogin = () => {
+    openSignIn({});
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout failed', error);
+      alert('Logout gagal. Silakan coba lagi.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 flex flex-col items-center">
       <div className="w-full max-w-xl flex flex-col min-h-screen relative">
+        {loginHint && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[120] px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-full shadow-lg">
+            {loginHint}
+          </div>
+        )}
         
         {viewState !== 'QUIZ' && viewState !== 'TAJWEED_PRACTICE' && viewState !== 'ADMIN' && (
           <Navbar 
@@ -259,6 +333,8 @@ const App: React.FC = () => {
                   onBack={handleBackToList}
                   bookmarks={bookmarks}
                   onToggleBookmark={toggleBookmark}
+                  isAuthenticated={!!clerkUser}
+                  onRequireLogin={() => requireLogin('Login dulu untuk akses fitur AI.')}
                 />
               )}
 
@@ -275,6 +351,10 @@ const App: React.FC = () => {
                 <ProfileView 
                   progress={progress}
                   bookmarks={bookmarks}
+                  user={clerkUser}
+                  authLoading={authLoading}
+                  onLogin={handleLogin}
+                  onLogout={handleLogout}
                   onSelectBookmark={handleSurahClick}
                   onResetData={handleResetData}
                   onGoToAdmin={handleGoToAdmin}
