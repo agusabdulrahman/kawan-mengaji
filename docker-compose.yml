@@ -1,0 +1,14 @@
+services:
+  app:
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      NGINX_ENTRYPOINT_QUIET_LOGS: "1"
+    build:
+      context: .
+      args:
+        GEMINI_API_KEY: ${GEMINI_API_KEY}
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+    ports:
+      - '3000:80'
