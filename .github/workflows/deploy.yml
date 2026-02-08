@@ -1,0 +1,18 @@
+name: Auto Deploy to Coolify
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Coolify Deploy
+        run: |
+          echo "Triggering Coolify deployment..."
+          curl -X POST -fsS \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
+            "${{ secrets.COOLIFY_DEPLOY_URL }}"
