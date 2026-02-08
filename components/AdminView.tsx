@@ -22,10 +22,14 @@ const AdminView: React.FC<AdminViewProps> = ({ lessons, onAddLesson, onBack }) =
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
     prompt: '',
     arabicContent: '',
-    options: ['', '', ''],
+    options: [''],
     correctAnswer: '',
     explanation: '',
-    type: 'CHOICE'
+    type: 'CHOICE',
+    audioUrl: '',
+    imageUrl: '',
+    scrambledWords: [],
+    pairs: []
   });
 
   const handleSaveLesson = () => {
@@ -38,13 +42,66 @@ const AdminView: React.FC<AdminViewProps> = ({ lessons, onAddLesson, onBack }) =
     }
   };
 
+  const addOption = () => {
+    setNewQuestion(prev => ({
+      ...prev,
+      options: [...(prev.options || []), '']
+    }));
+  };
+
+  const updateOption = (index: number, value: string) => {
+    setNewQuestion(prev => ({
+      ...prev,
+      options: (prev.options || []).map((opt, i) => (i === index ? value : opt))
+    }));
+  };
+
+  const removeOption = (index: number) => {
+    setNewQuestion(prev => ({
+      ...prev,
+      options: (prev.options || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const updatePair = (index: number, field: 'key' | 'value', value: string) => {
+    setNewQuestion(prev => ({
+      ...prev,
+      pairs: (prev.pairs || []).map((pair, i) => (i === index ? { ...pair, [field]: value } : pair))
+    }));
+  };
+
+  const addPair = () => {
+    setNewQuestion(prev => ({
+      ...prev,
+      pairs: [...(prev.pairs || []), { key: '', value: '' }]
+    }));
+  };
+
+  const removePair = (index: number) => {
+    setNewQuestion(prev => ({
+      ...prev,
+      pairs: (prev.pairs || []).filter((_, i) => i !== index)
+    }));
+  };
+
   const addQuestionToLesson = () => {
     if (newQuestion.prompt && newQuestion.correctAnswer) {
       setNewLesson(prev => ({
         ...prev,
         questions: [...(prev.questions || []), { ...newQuestion, id: `q-${Date.now()}` } as Question]
       }));
-      setNewQuestion({ prompt: '', arabicContent: '', options: ['', '', ''], correctAnswer: '', explanation: '', type: 'CHOICE' });
+      setNewQuestion({
+        prompt: '',
+        arabicContent: '',
+        options: [''],
+        correctAnswer: '',
+        explanation: '',
+        type: 'CHOICE',
+        audioUrl: '',
+        imageUrl: '',
+        scrambledWords: [],
+        pairs: []
+      });
     }
   };
 
@@ -139,6 +196,17 @@ const AdminView: React.FC<AdminViewProps> = ({ lessons, onAddLesson, onBack }) =
                 onChange={e => setNewQuestion({...newQuestion, prompt: e.target.value})}
                 className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm"
               />
+              <select
+                value={newQuestion.type}
+                onChange={e => setNewQuestion({ ...newQuestion, type: e.target.value as Question['type'] })}
+                className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm"
+              >
+                <option value="CHOICE">CHOICE</option>
+                <option value="AUDIO_MATCH">AUDIO_MATCH</option>
+                <option value="WORD_SCRAMBLE">WORD_SCRAMBLE</option>
+                <option value="MATCHING">MATCHING</option>
+                <option value="FLASHCARD">FLASHCARD</option>
+              </select>
               <input 
                 placeholder="Konten Arab (Opsional)"
                 value={newQuestion.arabicContent}
@@ -146,10 +214,104 @@ const AdminView: React.FC<AdminViewProps> = ({ lessons, onAddLesson, onBack }) =
                 className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm arabic-font text-right"
               />
               <input 
+                placeholder="Audio URL (Opsional)"
+                value={newQuestion.audioUrl || ''}
+                onChange={e => setNewQuestion({...newQuestion, audioUrl: e.target.value})}
+                className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm"
+              />
+              <input 
+                placeholder="Image URL (Opsional)"
+                value={newQuestion.imageUrl || ''}
+                onChange={e => setNewQuestion({...newQuestion, imageUrl: e.target.value})}
+                className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm"
+              />
+
+              {newQuestion.type === 'CHOICE' && (
+                <div className="mb-3 space-y-2">
+                  {(newQuestion.options || []).map((opt, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        placeholder={`Opsi ${i + 1}`}
+                        value={opt}
+                        onChange={e => updateOption(i, e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-sm"
+                      />
+                      {(newQuestion.options || []).length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeOption(i)}
+                          className="px-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-black"
+                        >
+                          HAPUS
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addOption}
+                    className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-xs font-black rounded-xl"
+                  >
+                    TAMBAH OPSI
+                  </button>
+                </div>
+              )}
+
+              {newQuestion.type === 'WORD_SCRAMBLE' && (
+                <input
+                  placeholder="Scrambled words (pisahkan dengan koma)"
+                  value={(newQuestion.scrambledWords || []).join(', ')}
+                  onChange={e => setNewQuestion({ ...newQuestion, scrambledWords: e.target.value.split(',').map(w => w.trim()).filter(Boolean) })}
+                  className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm"
+                />
+              )}
+
+              {newQuestion.type === 'MATCHING' && (
+                <div className="mb-3 space-y-2">
+                  {(newQuestion.pairs || []).map((pair, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        placeholder="Kunci"
+                        value={pair.key}
+                        onChange={e => updatePair(i, 'key', e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-sm"
+                      />
+                      <input
+                        placeholder="Nilai"
+                        value={pair.value}
+                        onChange={e => updatePair(i, 'value', e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePair(i)}
+                        className="px-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-black"
+                      >
+                        HAPUS
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addPair}
+                    className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-xs font-black rounded-xl"
+                  >
+                    TAMBAH PASANGAN
+                  </button>
+                </div>
+              )}
+
+              <input 
                 placeholder="Jawaban Benar"
                 value={newQuestion.correctAnswer}
                 onChange={e => setNewQuestion({...newQuestion, correctAnswer: e.target.value})}
                 className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm border-2 border-emerald-500/20"
+              />
+              <textarea
+                placeholder="Penjelasan (opsional)"
+                value={newQuestion.explanation}
+                onChange={e => setNewQuestion({ ...newQuestion, explanation: e.target.value })}
+                className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl mb-3 text-sm min-h-[90px]"
               />
               <button 
                 onClick={addQuestionToLesson}
