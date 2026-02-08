@@ -250,57 +250,59 @@ const TajweedPractice: React.FC<TajweedPracticeProps> = ({ onComplete, onQuit })
           ))}
         </div>
 
-        <div className="mt-10 w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">Tajwid via Audio</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Rekam bacaanmu untuk dinilai.</p>
+        {false && (
+          <div className="mt-10 w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-400">Tajwid via Audio</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Rekam bacaanmu untuk dinilai.</p>
+              </div>
+              {isRecording ? (
+                <button onClick={stopRecordingAndScore} className="px-4 py-2 bg-red-500 text-white text-xs font-black rounded-xl">
+                  STOP
+                </button>
+              ) : (
+                <button onClick={startRecording} disabled={isScoring} className="px-4 py-2 bg-emerald-600 text-white text-xs font-black rounded-xl disabled:opacity-60">
+                  REKAM
+                </button>
+              )}
             </div>
-            {isRecording ? (
-              <button onClick={stopRecordingAndScore} className="px-4 py-2 bg-red-500 text-white text-xs font-black rounded-xl">
-                STOP
-              </button>
-            ) : (
-              <button onClick={startRecording} disabled={isScoring} className="px-4 py-2 bg-emerald-600 text-white text-xs font-black rounded-xl disabled:opacity-60">
-                REKAM
-              </button>
+
+            {isScoring && <p className="text-xs text-slate-500">Menilai rekaman...</p>}
+
+            {!isScoring && (transcript || audioScore !== null || audioFeedback) && (
+              <div className="mt-3 space-y-2">
+                {transcript && (
+                  <p className="text-xs text-slate-500">
+                    <span className="font-bold">Transkrip:</span> {transcript}
+                  </p>
+                )}
+                {audioScore !== null && (
+                  <p className="text-xs text-slate-500">
+                    <span className="font-bold">Skor:</span> {audioScore}
+                  </p>
+                )}
+                {audioFeedback && (
+                  <p className="text-xs text-slate-500">
+                    <span className="font-bold">Feedback:</span> {audioFeedback}
+                  </p>
+                )}
+                {audioErrors.length > 0 && (
+                  <div className="text-xs text-slate-500">
+                    <span className="font-bold">Detail salah:</span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {audioErrors.slice(0, 12).map((err, idx) => (
+                        <span key={idx} className="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800">
+                          {err.expected || '∅'} → {err.got || '∅'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-
-          {isScoring && <p className="text-xs text-slate-500">Menilai rekaman...</p>}
-
-          {!isScoring && (transcript || audioScore !== null || audioFeedback) && (
-            <div className="mt-3 space-y-2">
-              {transcript && (
-                <p className="text-xs text-slate-500">
-                  <span className="font-bold">Transkrip:</span> {transcript}
-                </p>
-              )}
-              {audioScore !== null && (
-                <p className="text-xs text-slate-500">
-                  <span className="font-bold">Skor:</span> {audioScore}
-                </p>
-              )}
-              {audioFeedback && (
-                <p className="text-xs text-slate-500">
-                  <span className="font-bold">Feedback:</span> {audioFeedback}
-                </p>
-              )}
-              {audioErrors.length > 0 && (
-                <div className="text-xs text-slate-500">
-                  <span className="font-bold">Detail salah:</span>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {audioErrors.slice(0, 12).map((err, idx) => (
-                      <span key={idx} className="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800">
-                        {err.expected || '∅'} → {err.got || '∅'}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div
