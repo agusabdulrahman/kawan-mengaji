@@ -11,9 +11,18 @@ interface SurahDetailViewProps {
   onBack: () => void;
   bookmarks: Bookmark[];
   onToggleBookmark: (bookmark: Bookmark) => void;
+  isAuthenticated: boolean;
+  onRequireLogin: () => void;
 }
 
-const SurahDetailView: React.FC<SurahDetailViewProps> = ({ surahId, onBack, bookmarks, onToggleBookmark }) => {
+const SurahDetailView: React.FC<SurahDetailViewProps> = ({
+  surahId,
+  onBack,
+  bookmarks,
+  onToggleBookmark,
+  isAuthenticated,
+  onRequireLogin,
+}) => {
   const [surah, setSurah] = useState<SurahDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
@@ -81,6 +90,10 @@ const SurahDetailView: React.FC<SurahDetailViewProps> = ({ surahId, onBack, book
   };
 
   const handleAskAI = async (ayah?: Ayah, mode: 'TAFSIR' | 'TAJWEED' = 'TAFSIR') => {
+    if (!isAuthenticated) {
+      onRequireLogin();
+      return;
+    }
     setAiLoading(true);
     setAiResponse(null);
     setSelectedAyah(ayah || null);
