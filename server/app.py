@@ -15,10 +15,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# OPENAI_API_KEY = os.getenv("VITE_OPENAI_API_KEY", "")
-# WHISPER_MODEL = os.getenv("WHISPER_MODEL", "whisper-1")
-WHISPER_MODEL="whisper-1"
-VITE_OPENAI_API_KEY="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"
+OPENAI_API_KEY = os.getenv("VITE_OPENAI_API_KEY", "")
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "whisper-1")
 OPENAI_API_KEY = VITE_OPENAI_API_KEY
 WHISPER_MODEL = WHISPER_MODEL
 
