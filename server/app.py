@@ -6,6 +6,11 @@ from fastapi.responses import JSONResponse
 from openai import OpenAI
 import whisperx
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
