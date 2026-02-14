@@ -35,22 +35,47 @@ Create `.env.local` with these keys:
 ## Project Structure
 
 ```
-components/
-  AdminView.tsx
-  MadrasahPath.tsx
-  MadrasahQuiz.tsx
-  Navbar.tsx
-  ProfileView.tsx
-  SurahCard.tsx
-  SurahDetailView.tsx
-  TajweedGuide.tsx
-  TajweedPractice.tsx
-  TajweedText.tsx
-services/
-  geminiService.ts
-  learningData.ts
-  quranService.ts
-supabase/
-  functions/
-    whisper-score/
+├── .github
+│   └── workflows
+│       └── deploy.yml
+├── components
+│   ├── AdminView.tsx
+│   ├── MadrasahPath.tsx
+│   ├── MadrasahQuiz.tsx
+│   ├── Navbar.tsx
+│   ├── ProfileView.tsx
+│   ├── SurahCard.tsx
+│   ├── SurahDetailView.tsx
+│   ├── TajweedGuide.tsx
+│   ├── TajweedPractice.tsx
+│   └── TajweedText.tsx
+├── services
+│   ├── geminiService.ts
+│   ├── learningData.ts
+│   ├── quranService.ts
+│   ├── supabaseClient.ts
+│   └── userState.ts
+├── supabase
+│   └── functions
+│       ├── _shared
+│       │   └── cors.ts
+│       └── whisper-score
+│           └── index.ts
+├── .dockerignore
+├── .gitignore
+├── App.tsx
+├── Dockerfile
+├── README.md
+├── docker-compose.yml
+├── index.html
+├── index.tsx
+├── metadata.json
+├── nginx.conf
+├── package-lock.json
+├── package.json
+├── tsconfig.json
+├── types.ts
+└── vite.config.ts
 ```
+
+---
