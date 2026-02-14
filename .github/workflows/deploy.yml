@@ -6,7 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: 'agusabdulrahman/kawan-mengaji'
-  DEPLOY_PATH: '/opt/kawan-mengaji'
+  DEPLOY_PATH: '/home/agus/kawan-mengaji'
 
 jobs:
   build-and-deploy:
