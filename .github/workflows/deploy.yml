@@ -56,8 +56,11 @@ jobs:
             set -e
             mkdir -p "${{ env.DEPLOY_PATH }}"
             cd "${{ env.DEPLOY_PATH }}"
+            if [ ! -f .env.local ]; then
+              echo "APP_PORT=3001" > .env.local
+            fi
             echo "${{ secrets.GHCR_PAT }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            docker compose down --remove-orphans || true
-            docker compose up -d
+            docker compose --env-file .env.local down --remove-orphans || true
+            docker compose --env-file .env.local up -d
             docker image prune -af
