@@ -58,5 +58,6 @@ jobs:
             cd "${{ env.DEPLOY_PATH }}"
             echo "${{ secrets.GHCR_PAT }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker compose down --remove-orphans || true
             docker compose up -d
             docker image prune -af
