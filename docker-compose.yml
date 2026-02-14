@@ -1,8 +1,5 @@
 services:
   app:
-    env_file:
-      - .env
-      - .env.local
     environment:
       NGINX_ENTRYPOINT_QUIET_LOGS: '1'
     image: ghcr.io/agusabdulrahman/kawan-mengaji:latest
