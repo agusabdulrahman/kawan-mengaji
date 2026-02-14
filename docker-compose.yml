@@ -4,4 +4,4 @@ services:
       NGINX_ENTRYPOINT_QUIET_LOGS: '1'
     image: ghcr.io/agusabdulrahman/kawan-mengaji:latest
     ports:
-      - '${APP_PORT:-3001}:70'
+      - '3000:80'
