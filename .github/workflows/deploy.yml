@@ -1,11 +1,17 @@
 name: Build and Deploy
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
+
+# User agus
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: "agusabdulrahman/kawan-mengaji"
+  IMAGE_NAME: 'agusabdulrahman/kawan-mengaji'
+  DEPLOY_USER: agus
+  DEPLOY_PORT: 3000
+  DEPLOY_DOMAIN: 'https://kawanmengaji.com'
+  DEPLOY_DIR: '/projects/kawan_mengaji'
 
 jobs:
   build-and-deploy:
@@ -35,7 +41,16 @@ jobs:
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
 
-      - name: Deploy to Coolify
+      - name: Deploy to server
         run: |
-          curl --request GET '${{ secrets.COOLIFY_WEBHOOK }}' \
-            --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key "${DEPLOY_USER}@${{ secrets.SERVER_IP }}" << EOF
+            set -e
+            cd ${DEPLOY_DIR}
+            docker compose pull
+            docker compose up -d --remove-orphans
+          EOF
