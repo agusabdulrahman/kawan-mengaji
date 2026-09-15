@@ -3,15 +3,9 @@ on:
   push:
     branches: ['main']
 
-# User agus
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: 'agusabdulrahman/kawan-mengaji'
-  DEPLOY_USER: agus
-  DEPLOY_PORT: 3000
-  DEPLOY_DOMAIN: 'https://kawanmengaji.com'
-  DEPLOY_DIR: 'projects/kawan_mengaji'
 
 jobs:
   build-and-deploy:
@@ -41,32 +35,7 @@ jobs:
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
 
-      - name: Deploy to server
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy_key "${DEPLOY_USER}@${{ secrets.SERVER_IP }}" << EOF
-            set -e
-            if ! docker info > /dev/null 2>&1; then
-              echo "User ${DEPLOY_USER} cannot access Docker. Run on server: sudo usermod -aG docker ${DEPLOY_USER}, then logout/login."
-              exit 1
-            fi
-            mkdir -p "${DEPLOY_DIR}"
-            cd "${DEPLOY_DIR}"
-            cat > docker-compose.yml << COMPOSE
-          services:
-            app:
-              image: ${REGISTRY}/${IMAGE_NAME}:latest
-              restart: unless-stopped
-              environment:
-                NGINX_ENTRYPOINT_QUIET_LOGS: '1'
-              ports:
-                - '${DEPLOY_PORT}:80'
-          COMPOSE
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${REGISTRY} -u "${{ github.actor }}" --password-stdin
-            docker compose pull
-            docker compose up -d --remove-orphans
-          EOF
+      # - name: Deploy to Coolify
+      #   run: |
+      #     curl --request GET '${{ secrets.COOLIFY_WEBHOOK }}' \
+      #       --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
