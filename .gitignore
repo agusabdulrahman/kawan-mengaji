@@ -24,6 +24,10 @@ dist-ssr
 *.sw?
 
 
+# File
+/backup
+
+
 # Dependency directories
 
 __pycache__
@@ -31,4 +35,4 @@ __pycache__
 env
 .env
 *.env
-.env
+/.env
