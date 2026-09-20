@@ -15,11 +15,18 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
 
 RUN npm run build
 
-# FROM nginx:1.27-alpine AS runtime
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-# COPY --from=build /app/dist /usr/share/nginx/html
-COPY docker-entrypoint.sh /docker-entrypoint.d/30-env-config.sh
-RUN chmod +x /docker-entrypoint.d/30-env-config.sh
+FROM nginx:alpine
+
+# Copy custom Nginx configuration for SPA routing & caching
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy entrypoint script to inject runtime environment variables into env-config.js
+COPY docker-entrypoint.sh /docker-entrypoint.d/40-env-config.sh
+RUN chmod +x /docker-entrypoint.d/40-env-config.sh
+
+# Copy built static files from build stage
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
-# CMD ["nginx", "-g", "daemon off;"]
+
+CMD ["nginx", "-g", "daemon off;"]
